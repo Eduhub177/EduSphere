@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { storage, Result } from '@/lib/storage';
 
 const CLASSES = ['All Classes', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'];
@@ -271,9 +272,7 @@ export default function Leaderboard() {
         )}
       </div>
 
-      <footer style={{ textAlign: 'center', padding: '1.5rem', color: 'rgba(201,184,255,0.25)', fontSize: '0.8rem', borderTop: '1px solid rgba(201,184,255,0.06)', fontFamily: 'Inter', marginTop: '2rem' }}>
-        © 2026 EduSphere — Smart Learning, Real Results
-      </footer>
+      <Footer />
     </div>
   );
 }

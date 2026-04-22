@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import ParticleBackground from '@/components/ParticleBackground';
 import { ToastContainer, showToast } from '@/components/Toast';
+import Footer from '@/components/Footer';
 import { storage } from '@/lib/storage';
 
 export default function Landing() {
@@ -247,17 +248,7 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer style={{
-          textAlign: 'center',
-          padding: '1.5rem',
-          color: 'rgba(201,184,255,0.3)',
-          fontSize: '0.82rem',
-          borderTop: '1px solid rgba(201,184,255,0.08)',
-          fontFamily: 'Inter'
-        }}>
-          © 2026 EduSphere — Smart Learning, Real Results
-        </footer>
+        <Footer />
       </div>
     </div>
   );

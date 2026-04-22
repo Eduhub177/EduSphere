@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { ToastContainer, showToast } from '@/components/Toast';
 import { storage, Question, Exam } from '@/lib/storage';
 
@@ -138,14 +139,35 @@ export default function TeacherDashboard() {
             </div>
           ) : notifications.map((n, i) => (
             <div key={i} style={{
-              background: 'rgba(201,184,255,0.06)',
-              border: '1px solid rgba(201,184,255,0.12)',
+              background: n.exitViolation ? 'rgba(255,60,60,0.07)' : 'rgba(201,184,255,0.06)',
+              border: `1px solid ${n.exitViolation ? 'rgba(255,80,80,0.3)' : 'rgba(201,184,255,0.12)'}`,
               borderRadius: '10px',
               padding: '0.9rem',
-              marginBottom: '0.6rem'
+              marginBottom: '0.6rem',
+              position: 'relative'
             }}>
+              {n.exitViolation && (
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  background: 'rgba(255,60,60,0.18)',
+                  border: '1px solid rgba(255,80,80,0.4)',
+                  borderRadius: '6px',
+                  padding: '0.15rem 0.55rem',
+                  color: '#ff7070',
+                  fontSize: '0.72rem',
+                  fontWeight: '700',
+                  marginBottom: '0.5rem',
+                  letterSpacing: '0.03em'
+                }}>
+                  ⚠️ Exam Exited
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-                <span style={{ fontWeight: '600', color: 'rgba(230,225,255,0.9)', fontSize: '0.9rem' }}>{n.studentName}</span>
+                <span style={{ fontWeight: '600', color: n.exitViolation ? '#ffaaaa' : 'rgba(230,225,255,0.9)', fontSize: '0.9rem' }}>
+                  {n.studentName}
+                </span>
                 <span style={{
                   color: n.percentage >= 70 ? '#48c78e' : n.percentage >= 50 ? '#f0c040' : '#ff6b6b',
                   fontWeight: '700', fontSize: '0.9rem'
@@ -153,6 +175,11 @@ export default function TeacherDashboard() {
                   {n.percentage}%
                 </span>
               </div>
+              {n.exitViolation && n.violationType && (
+                <div style={{ color: 'rgba(255,150,150,0.65)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                  Violation: {n.violationType}
+                </div>
+              )}
               <div style={{ color: 'rgba(201,184,255,0.55)', fontSize: '0.8rem' }}>
                 {n.studentClass} • {n.examTitle} • {n.score}/{n.total}
               </div>
@@ -303,9 +330,7 @@ export default function TeacherDashboard() {
         </div>
       </div>
 
-      <footer style={{ textAlign: 'center', padding: '1.5rem', color: 'rgba(201,184,255,0.25)', fontSize: '0.8rem', borderTop: '1px solid rgba(201,184,255,0.06)', fontFamily: 'Inter', marginTop: '2rem' }}>
-        © 2026 EduSphere — Smart Learning, Real Results
-      </footer>
+      <Footer />
     </div>
   );
 }

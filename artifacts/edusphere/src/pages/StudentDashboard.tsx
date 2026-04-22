@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { ToastContainer } from '@/components/Toast';
 import { storage, Exam, Result, Student } from '@/lib/storage';
 
@@ -217,9 +218,7 @@ export default function StudentDashboard() {
         )}
       </div>
 
-      <footer style={{ textAlign: 'center', padding: '1.5rem', color: 'rgba(201,184,255,0.25)', fontSize: '0.8rem', borderTop: '1px solid rgba(201,184,255,0.06)', fontFamily: 'Inter', marginTop: '2rem' }}>
-        © 2026 EduSphere — Smart Learning, Real Results
-      </footer>
+      <Footer />
     </div>
   );
 }

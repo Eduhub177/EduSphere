@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { storage, Result, Exam } from '@/lib/storage';
 
 export default function Results() {
@@ -18,6 +19,7 @@ export default function Results() {
 
   if (!result) return null;
 
+  const hasViolation = result.exitViolation === true;
   const pct = result.percentage;
   const color = pct >= 70 ? '#48c78e' : pct >= 50 ? '#f0c040' : '#ff6b6b';
   const colorBg = pct >= 70 ? 'rgba(72,199,142,0.1)' : pct >= 50 ? 'rgba(240,192,64,0.1)' : 'rgba(255,107,107,0.1)';
@@ -32,6 +34,31 @@ export default function Results() {
       <Navbar title="Results" />
 
       <div className="page-enter" style={{ maxWidth: '750px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+        {/* Exit Violation Banner */}
+        {hasViolation && (
+          <div style={{
+            background: 'rgba(255,80,80,0.1)',
+            border: '1.5px solid rgba(255,80,80,0.45)',
+            borderRadius: '14px',
+            padding: '1rem 1.25rem',
+            marginBottom: '1.25rem',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.75rem',
+          }}>
+            <span style={{ fontSize: '1.4rem', flexShrink: 0, marginTop: '1px' }}>⚠️</span>
+            <div>
+              <p style={{ fontFamily: 'Poppins', fontWeight: '700', color: '#ff8080', fontSize: '0.92rem', marginBottom: '0.25rem' }}>
+                This exam was auto-submitted because you exited the exam window.
+              </p>
+              <p style={{ color: 'rgba(255,150,150,0.65)', fontSize: '0.82rem' }}>
+                Violation type: <strong style={{ color: 'rgba(255,150,150,0.85)' }}>{result.violationType}</strong>.
+                This activity has been reported to your teacher.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Trophy Section */}
         <div className="glass" style={{ padding: '2.5rem', textAlign: 'center', marginBottom: '1.5rem' }}>
           <div className="trophy-anim" style={{ fontSize: '4rem', display: 'block', marginBottom: '0.75rem' }}>
@@ -163,9 +190,7 @@ export default function Results() {
         </div>
       </div>
 
-      <footer style={{ textAlign: 'center', padding: '1.5rem', color: 'rgba(201,184,255,0.25)', fontSize: '0.8rem', borderTop: '1px solid rgba(201,184,255,0.06)', fontFamily: 'Inter', marginTop: '2rem' }}>
-        © 2026 EduSphere — Smart Learning, Real Results
-      </footer>
+      <Footer />
     </div>
   );
 }

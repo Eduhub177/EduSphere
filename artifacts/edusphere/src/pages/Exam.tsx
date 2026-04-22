@@ -1,7 +1,8 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { ToastContainer, showToast } from '@/components/Toast';
 import { storage, Exam as ExamType, Result } from '@/lib/storage';
 
@@ -16,59 +17,56 @@ export default function Exam() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [currentQ, setCurrentQ] = useState(0);
   const [confirming, setConfirming] = useState(false);
+
+  // Anti-cheat state
+  const [showWarning, setShowWarning] = useState(false);
+  const [violationCount, setViolationCount] = useState(0);
+  const [warningMessage, setWarningMessage] = useState('');
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const examRef = useRef<ExamType | null>(null);
+  const answersRef = useRef<(string | null)[]>([]);
+  const submittedRef = useRef(false);
+  const violationCountRef = useRef(0);
 
-  useEffect(() => {
-    if (!storage.isStudentLoggedIn()) { navigate('/'); return; }
-    const e = storage.getExamById(examId);
-    if (!e) { navigate('/student'); return; }
-    setExam(e);
-    setAnswers(new Array(e.questions.length).fill(null));
-    setTimeLeft(e.timerMinutes * 60);
-  }, [examId]);
+  // Keep refs in sync so event handlers always have latest values
+  useEffect(() => { examRef.current = exam; }, [exam]);
+  useEffect(() => { answersRef.current = answers; }, [answers]);
 
-  useEffect(() => {
-    if (!exam) return;
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current!);
-          handleSubmit(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timerRef.current!);
-  }, [exam]);
+  const doSubmit = useCallback((
+    opts: { autoSubmit?: boolean; violation?: boolean; violationType?: string } = {}
+  ) => {
+    if (submittedRef.current) return;
+    const e = examRef.current;
+    if (!e) return;
 
-  const handleSubmit = (autoSubmit = false) => {
-    if (!exam) return;
+    submittedRef.current = true;
     clearInterval(timerRef.current!);
 
     const student = storage.getCurrentStudent()!;
     let score = 0;
-    const optMap = ['A', 'B', 'C', 'D'];
-    const finalAnswers = answers.map(a => a);
+    const finalAnswers = answersRef.current.map(a => a);
 
-    exam.questions.forEach((q, i) => {
+    e.questions.forEach((q, i) => {
       if (finalAnswers[i] === q.correct) score++;
     });
 
-    const percentage = Math.round((score / exam.questions.length) * 100);
+    const percentage = Math.round((score / e.questions.length) * 100);
 
     const result: Result = {
       id: storage.generateId(),
       studentName: student.name,
       studentPhone: student.phone,
       studentClass: student.class,
-      examTitle: exam.title,
-      examId: exam.id,
+      examTitle: e.title,
+      examId: e.id,
       score,
-      total: exam.questions.length,
+      total: e.questions.length,
       percentage,
       answers: finalAnswers,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      exitViolation: opts.violation || false,
+      violationType: opts.violationType,
     };
 
     storage.addResult(result);
@@ -77,16 +75,108 @@ export default function Exam() {
       id: storage.generateId(),
       studentName: student.name,
       studentClass: student.class,
-      examTitle: exam.title,
+      examTitle: e.title,
       score,
-      total: exam.questions.length,
+      total: e.questions.length,
       percentage,
       timestamp: new Date().toISOString(),
-      read: false
+      read: false,
+      exitViolation: opts.violation || false,
+      violationType: opts.violationType,
     });
 
-    if (autoSubmit) showToast("Time's up! Exam auto-submitted.", 'info');
-    navigate('/results');
+    if (opts.violation) {
+      showToast('Exam auto-submitted due to exit.', 'error');
+    } else if (opts.autoSubmit) {
+      showToast("Time's up! Exam auto-submitted.", 'info');
+    }
+
+    setTimeout(() => navigate('/results'), 600);
+  }, [navigate]);
+
+  // Set up exam
+  useEffect(() => {
+    if (!storage.isStudentLoggedIn()) { navigate('/'); return; }
+    const e = storage.getExamById(examId);
+    if (!e) { navigate('/student'); return; }
+    setExam(e);
+    examRef.current = e;
+    const initialAnswers = new Array(e.questions.length).fill(null);
+    setAnswers(initialAnswers);
+    answersRef.current = initialAnswers;
+    setTimeLeft(e.timerMinutes * 60);
+  }, [examId]);
+
+  // Timer
+  useEffect(() => {
+    if (!exam) return;
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current!);
+          doSubmit({ autoSubmit: true });
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current!);
+  }, [exam, doSubmit]);
+
+  // Anti-cheat: visibilitychange (tab switch)
+  useEffect(() => {
+    if (!exam) return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && !submittedRef.current) {
+        violationCountRef.current += 1;
+        setViolationCount(violationCountRef.current);
+
+        if (violationCountRef.current >= 2) {
+          // Second violation — auto submit
+          setShowWarning(false);
+          doSubmit({ violation: true, violationType: 'Tab switched' });
+        } else {
+          // First violation — show warning
+          setWarningMessage('⚠️ Warning! Do not leave the exam window.\nThis activity has been recorded.');
+          setShowWarning(true);
+        }
+      }
+    };
+
+    // beforeunload: browser close / refresh / navigate away
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!submittedRef.current) {
+        doSubmit({ violation: true, violationType: 'Browser closed / page refreshed' });
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    // popstate: back button
+    const handlePopState = () => {
+      if (!submittedRef.current) {
+        doSubmit({ violation: true, violationType: 'Browser back button' });
+      }
+    };
+
+    // Push a state so back button triggers popstate instead of navigating
+    window.history.pushState(null, '', window.location.href);
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [exam, doSubmit]);
+
+  const handleSubmit = (manual = false) => {
+    setConfirming(false);
+    doSubmit({ autoSubmit: !manual });
   };
 
   const formatTime = (s: number) => {
@@ -99,6 +189,7 @@ export default function Exam() {
     const updated = [...answers];
     updated[currentQ] = ans;
     setAnswers(updated);
+    answersRef.current = updated;
   };
 
   const optLabels = ['A', 'B', 'C', 'D'];
@@ -112,10 +203,50 @@ export default function Exam() {
   );
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)', display: 'flex', flexDirection: 'column' }}>
       <ToastContainer />
 
-      {/* Confirm Dialog */}
+      {/* Exit Warning Overlay */}
+      {showWarning && (
+        <div className="exit-warning-overlay" onClick={() => setShowWarning(false)}>
+          <div className="exit-warning-box" onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: '3.5rem', marginBottom: '1rem', animation: 'pulse 1s ease infinite' }}>⚠️</div>
+            <h2 style={{
+              fontFamily: 'Poppins', fontWeight: '800', fontSize: '1.3rem',
+              color: '#ff6b6b', marginBottom: '0.75rem', lineHeight: '1.4'
+            }}>
+              Warning! Do not leave the exam window.
+            </h2>
+            <p style={{ color: 'rgba(255,160,160,0.75)', fontSize: '0.9rem', marginBottom: '0.5rem', lineHeight: '1.6' }}>
+              This activity has been recorded.
+            </p>
+            <p style={{ color: 'rgba(255,120,120,0.55)', fontSize: '0.82rem', marginBottom: '1.5rem' }}>
+              A second violation will auto-submit your exam immediately.
+            </p>
+            <div style={{
+              background: 'rgba(255,80,80,0.1)',
+              border: '1px solid rgba(255,80,80,0.3)',
+              borderRadius: '8px',
+              padding: '0.6rem 1rem',
+              color: 'rgba(255,160,160,0.7)',
+              fontSize: '0.78rem',
+              marginBottom: '1.25rem',
+              fontStyle: 'italic'
+            }}>
+              Violation {violationCount}/2 recorded
+            </div>
+            <button
+              className="btn-danger"
+              style={{ padding: '0.7rem 2rem', width: '100%' }}
+              onClick={() => setShowWarning(false)}
+            >
+              Resume Exam
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Submit Dialog */}
       {confirming && (
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex',
@@ -129,10 +260,13 @@ export default function Exam() {
               You've answered <strong style={{ color: '#7ec8e3' }}>{answered}/{exam.questions.length}</strong> questions.
             </p>
             <p style={{ color: 'rgba(201,184,255,0.5)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-              {exam.questions.length - answered > 0 && `${exam.questions.length - answered} unanswered question${exam.questions.length - answered !== 1 ? 's' : ''} will be marked wrong.`}
+              {exam.questions.length - answered > 0
+                ? `${exam.questions.length - answered} unanswered question${exam.questions.length - answered !== 1 ? 's' : ''} will be marked wrong.`
+                : 'All questions are answered. Good job!'
+              }
             </p>
             <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button className="btn-primary" style={{ flex: 1 }} onClick={() => handleSubmit(false)}>
+              <button className="btn-primary" style={{ flex: 1 }} onClick={() => handleSubmit(true)}>
                 Submit Now
               </button>
               <button className="btn-outline" onClick={() => setConfirming(false)}>
@@ -152,7 +286,22 @@ export default function Exam() {
         }
       />
 
-      <div className="page-enter" style={{ maxWidth: '750px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      {/* Violation indicator */}
+      {violationCount > 0 && !showWarning && (
+        <div style={{
+          background: 'rgba(255,80,80,0.12)',
+          borderBottom: '1px solid rgba(255,80,80,0.25)',
+          padding: '0.5rem 1.5rem',
+          textAlign: 'center',
+          color: '#ff8080',
+          fontSize: '0.8rem',
+          fontFamily: 'Inter'
+        }}>
+          ⚠️ Exit violation recorded ({violationCount}/2) — next violation will auto-submit your exam
+        </div>
+      )}
+
+      <div className="page-enter" style={{ maxWidth: '750px', margin: '0 auto', padding: '2rem 1.5rem', flex: 1 }}>
         {/* Progress */}
         <div className="glass" style={{ padding: '1rem 1.5rem', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -287,9 +436,7 @@ export default function Exam() {
         )}
       </div>
 
-      <footer style={{ textAlign: 'center', padding: '1.5rem', color: 'rgba(201,184,255,0.25)', fontSize: '0.8rem', borderTop: '1px solid rgba(201,184,255,0.06)', fontFamily: 'Inter', marginTop: '2rem' }}>
-        © 2026 EduSphere — Smart Learning, Real Results
-      </footer>
+      <Footer />
     </div>
   );
 }

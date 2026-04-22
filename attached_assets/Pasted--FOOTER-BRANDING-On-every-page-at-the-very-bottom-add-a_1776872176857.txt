@@ -1,0 +1,60 @@
+---
+
+🏷️ FOOTER BRANDING:
+- On every page, at the very bottom, add an aesthetic footer with:
+  - A subtle divider line with a soft purple glow effect
+  - Text styled in elegant small caps or light italic font:
+      "This website belongs to  ✦  Tarun Kanti Shib"
+  - Below that, in even smaller muted text with a coding icon (like </> or ⚙):
+      "Developed with ❤️ by Sreshtangshu Gope"
+  - Both lines centered, with gentle fade-in animation on page load
+  - Use a soft gradient text effect on the name "Tarun Kanti Shib" 
+    (purple to cyan: #c9b8ff → #7ec8e3)
+  - Use a muted glow or shimmer animation on "Sreshtangshu Gope"
+  - Footer background should be slightly darker than the page 
+    (#0d0d1a) with a top border of 0.5px glowing purple
+  - Make it look premium and minimal — not cluttered
+
+---
+
+🚨 EXAM EXIT DETECTION (Anti-Cheat + Auto-Submit):
+- On the exam page (exam.html), detect if the student leaves 
+  the exam in any of these ways:
+    1. Closes the browser tab or window (beforeunload event)
+    2. Navigates away (visibilitychange event — tab switch)
+    3. Presses browser Back button
+    4. Refreshes the page
+
+- On first violation (tab switch / visibility change):
+    - Show a full-screen red warning overlay:
+        ⚠️ "Warning! Do not leave the exam window.
+            This activity has been recorded."
+    - Resume exam when they return, but log the violation
+
+- On exit/close/refresh (beforeunload) OR second violation:
+    - Immediately auto-submit whatever answers have been filled
+    - Calculate score for answered questions (unanswered = wrong)
+    - Save result to localStorage 'results' array as normal
+    - Add a special notification to 'notifications' array for teacher:
+      {
+        studentName, studentClass, examTitle,
+        score, total, percentage, timestamp,
+        exitViolation: true,
+        violationType: "Tab switched" | "Browser closed" | "Page refreshed",
+        read: false
+      }
+    - Redirect student to results.html with a message:
+        "Exam auto-submitted due to exit. Your result has been recorded."
+
+- In the Teacher Notification Panel:
+    - Notifications where exitViolation: true should show a 
+      distinct RED WARNING badge labeled "⚠️ Exam Exited"
+    - Show the violation type below the student name
+    - Sort these to appear at the TOP of the notification list
+    - The badge count should still increment for these
+
+- On the Results Page for the student:
+    - If the result has exitViolation: true, show a subtle 
+      red banner at the top:
+        "⚠️ This exam was auto-submitted because you exited 
+         the exam window."

@@ -26,6 +26,8 @@ export interface Result {
   percentage: number;
   answers: (string | null)[];
   timestamp: string;
+  exitViolation?: boolean;
+  violationType?: string;
 }
 
 export interface Notification {
@@ -38,6 +40,8 @@ export interface Notification {
   percentage: number;
   timestamp: string;
   read: boolean;
+  exitViolation?: boolean;
+  violationType?: string;
 }
 
 export interface Student {
@@ -87,7 +91,14 @@ export const storage = {
   },
   addNotification(notification: Notification) {
     const notifs = this.getNotifications();
-    notifs.unshift(notification);
+    // Exit violations go to the top, then unread, then read
+    if (notification.exitViolation) {
+      notifs.unshift(notification);
+    } else {
+      const firstNonViolation = notifs.findIndex(n => !n.exitViolation);
+      if (firstNonViolation === -1) notifs.push(notification);
+      else notifs.splice(firstNonViolation, 0, notification);
+    }
     localStorage.setItem('notifications', JSON.stringify(notifs));
   },
   markAllNotificationsRead() {
