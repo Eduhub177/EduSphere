@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "rootDirectory": "artifacts/edusphere",
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
