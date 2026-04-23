@@ -197,100 +197,95 @@ export default function Landing() {
               🏅 No champions yet — be the first to complete 5 exams!
             </div>
           ) : (
-            <div style={{
-              display: 'flex',
-              gap: '0.85rem',
-              overflowX: 'auto',
-              paddingBottom: '0.5rem',
-              scrollbarWidth: 'none',
-            }}>
-              {champions.map((c, i) => {
-                const color = c.avgScore >= 70 ? '#48c78e' : c.avgScore >= 50 ? '#f0c040' : '#ff6b6b';
-                const isTop3 = c.rank <= 3;
-                const medals = ['🥇', '🥈', '🥉'];
-                return (
-                  <div
-                    key={c.class}
-                    className="page-enter"
-                    style={{
-                      animationDelay: `${i * 0.07}s`,
-                      minWidth: '148px',
-                      background: isTop3
-                        ? `rgba(${c.rank === 1 ? '240,192,64' : c.rank === 2 ? '160,160,176' : '205,127,50'},0.07)`
-                        : 'rgba(201,184,255,0.04)',
-                      border: `1px solid ${isTop3
-                        ? `rgba(${c.rank === 1 ? '240,192,64' : c.rank === 2 ? '160,160,176' : '205,127,50'},0.28)`
-                        : 'rgba(201,184,255,0.12)'}`,
-                      borderRadius: '14px',
-                      padding: '1rem 0.85rem',
-                      textAlign: 'center',
-                      backdropFilter: 'blur(10px)',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {/* Class badge */}
-                    <div style={{
-                      display: 'inline-block',
-                      background: 'rgba(201,184,255,0.1)',
-                      border: '1px solid rgba(201,184,255,0.18)',
-                      borderRadius: '6px',
-                      padding: '0.15rem 0.55rem',
-                      color: 'rgba(201,184,255,0.6)',
-                      fontSize: '0.7rem',
-                      fontWeight: '600',
-                      letterSpacing: '0.04em',
-                      marginBottom: '0.6rem',
-                    }}>
-                      {c.class}
-                    </div>
+            /* Marquee ticker — overflows clipped, track duplicated for seamless loop */
+            <div style={{ overflow: 'hidden', position: 'relative' }}>
+              {/* Fade edges */}
+              <div style={{
+                position: 'absolute', left: 0, top: 0, bottom: 0, width: '60px', zIndex: 2,
+                background: 'linear-gradient(90deg, #16213e 0%, transparent 100%)',
+                pointerEvents: 'none'
+              }} />
+              <div style={{
+                position: 'absolute', right: 0, top: 0, bottom: 0, width: '60px', zIndex: 2,
+                background: 'linear-gradient(270deg, #16213e 0%, transparent 100%)',
+                pointerEvents: 'none'
+              }} />
 
-                    {/* Medal or rank */}
-                    <div style={{ fontSize: isTop3 ? '1.6rem' : '0.88rem', marginBottom: '0.4rem', lineHeight: 1.2 }}>
-                      {isTop3 ? medals[c.rank - 1] : `#${c.rank}`}
-                    </div>
-
-                    {/* Name */}
-                    <div style={{
-                      fontFamily: 'Poppins',
-                      fontWeight: '700',
-                      fontSize: '0.82rem',
-                      color: 'rgba(230,225,255,0.9)',
-                      marginBottom: '0.45rem',
-                      lineHeight: 1.3,
-                      wordBreak: 'break-word',
-                    }}>
-                      {c.name}
-                    </div>
-
-                    {/* Score */}
-                    <div style={{
-                      fontFamily: 'Poppins',
-                      fontWeight: '800',
-                      fontSize: '1.25rem',
-                      color,
-                      lineHeight: 1,
-                      marginBottom: '0.25rem',
-                    }}>
-                      {c.avgScore}%
-                    </div>
-
-                    {/* Mini progress bar */}
-                    <div style={{ height: '3px', background: 'rgba(201,184,255,0.08)', borderRadius: '2px', overflow: 'hidden', margin: '0.35rem 0' }}>
+              <div className="champions-track" style={{ gap: '0.85rem', padding: '0.25rem 0' }}>
+                {/* Render champions twice — second copy creates the seamless loop */}
+                {[...champions, ...champions].map((c, i) => {
+                  const color = c.avgScore >= 70 ? '#48c78e' : c.avgScore >= 50 ? '#f0c040' : '#ff6b6b';
+                  const isTop3 = c.rank <= 3;
+                  const medals = ['🥇', '🥈', '🥉'];
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        minWidth: '148px',
+                        background: isTop3
+                          ? `rgba(${c.rank === 1 ? '240,192,64' : c.rank === 2 ? '160,160,176' : '205,127,50'},0.07)`
+                          : 'rgba(201,184,255,0.04)',
+                        border: `1px solid ${isTop3
+                          ? `rgba(${c.rank === 1 ? '240,192,64' : c.rank === 2 ? '160,160,176' : '205,127,50'},0.28)`
+                          : 'rgba(201,184,255,0.12)'}`,
+                        borderRadius: '14px',
+                        padding: '1rem 0.85rem',
+                        textAlign: 'center',
+                        backdropFilter: 'blur(10px)',
+                        flexShrink: 0,
+                        marginRight: '0.85rem',
+                      }}
+                    >
+                      {/* Class badge */}
                       <div style={{
-                        height: '100%',
-                        width: `${c.avgScore}%`,
-                        background: color,
-                        borderRadius: '2px',
-                        transition: 'width 0.6s ease',
-                      }} />
-                    </div>
+                        display: 'inline-block',
+                        background: 'rgba(201,184,255,0.1)',
+                        border: '1px solid rgba(201,184,255,0.18)',
+                        borderRadius: '6px',
+                        padding: '0.15rem 0.55rem',
+                        color: 'rgba(201,184,255,0.6)',
+                        fontSize: '0.7rem',
+                        fontWeight: '600',
+                        letterSpacing: '0.04em',
+                        marginBottom: '0.6rem',
+                      }}>
+                        {c.class}
+                      </div>
 
-                    <div style={{ color: 'rgba(201,184,255,0.35)', fontSize: '0.68rem' }}>
-                      {c.examCount} exams
+                      {/* Medal or rank */}
+                      <div style={{ fontSize: isTop3 ? '1.6rem' : '0.88rem', marginBottom: '0.4rem', lineHeight: 1.2 }}>
+                        {isTop3 ? medals[c.rank - 1] : `#${c.rank}`}
+                      </div>
+
+                      {/* Name */}
+                      <div style={{
+                        fontFamily: 'Poppins', fontWeight: '700', fontSize: '0.82rem',
+                        color: 'rgba(230,225,255,0.9)', marginBottom: '0.45rem',
+                        lineHeight: 1.3, wordBreak: 'break-word',
+                      }}>
+                        {c.name}
+                      </div>
+
+                      {/* Score */}
+                      <div style={{
+                        fontFamily: 'Poppins', fontWeight: '800', fontSize: '1.25rem',
+                        color, lineHeight: 1, marginBottom: '0.25rem',
+                      }}>
+                        {c.avgScore}%
+                      </div>
+
+                      {/* Mini bar */}
+                      <div style={{ height: '3px', background: 'rgba(201,184,255,0.08)', borderRadius: '2px', overflow: 'hidden', margin: '0.35rem 0' }}>
+                        <div style={{ height: '100%', width: `${c.avgScore}%`, background: color, borderRadius: '2px' }} />
+                      </div>
+
+                      <div style={{ color: 'rgba(201,184,255,0.35)', fontSize: '0.68rem' }}>
+                        {c.examCount} exams
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

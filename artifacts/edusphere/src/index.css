@@ -599,6 +599,20 @@
   animation: fadeIn 0.25s ease;
 }
 
+/* ===== CHAMPIONS MARQUEE ===== */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.champions-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 18s linear infinite;
+}
+.champions-track:hover {
+  animation-play-state: paused;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .navbar {
