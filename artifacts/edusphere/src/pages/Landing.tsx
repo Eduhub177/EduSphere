@@ -4,7 +4,49 @@ import { useLocation } from 'wouter';
 import ParticleBackground from '@/components/ParticleBackground';
 import { ToastContainer, showToast } from '@/components/Toast';
 import Footer from '@/components/Footer';
-import { storage } from '@/lib/storage';
+import { storage, Result } from '@/lib/storage';
+
+interface ClassChampion {
+  class: string;
+  name: string;
+  avgScore: number;
+  examCount: number;
+  rank: number;
+}
+
+function getClassChampions(results: Result[]): ClassChampion[] {
+  const map = new Map<string, { name: string; phone: string; class: string; scores: number[] }>();
+  results.forEach(r => {
+    const key = `${r.studentName}|${r.studentPhone}`;
+    if (!map.has(key)) map.set(key, { name: r.studentName, phone: r.studentPhone, class: r.studentClass, scores: [] });
+    map.get(key)!.scores.push(r.percentage);
+  });
+
+  const qualified: { name: string; class: string; avgScore: number; examCount: number }[] = [];
+  map.forEach(v => {
+    if (v.scores.length >= 5) {
+      const avg = Math.round(v.scores.reduce((a, b) => a + b, 0) / v.scores.length);
+      qualified.push({ name: v.name, class: v.class, avgScore: avg, examCount: v.scores.length });
+    }
+  });
+
+  // Top student per class
+  const byClass = new Map<string, typeof qualified[0]>();
+  qualified.forEach(s => {
+    if (!byClass.has(s.class) || s.avgScore > byClass.get(s.class)!.avgScore) byClass.set(s.class, s);
+  });
+
+  // Sort classes by class number, assign rank across all
+  const all = qualified.sort((a, b) => b.avgScore - a.avgScore);
+  const classOrder = ['Class 6','Class 7','Class 8','Class 9','Class 10','Class 11','Class 12'];
+
+  return classOrder
+    .filter(c => byClass.has(c))
+    .map(c => {
+      const s = byClass.get(c)!;
+      return { class: c, name: s.name, avgScore: s.avgScore, examCount: s.examCount, rank: all.findIndex(x => x.name === s.name && x.class === s.class) + 1 };
+    });
+}
 
 export default function Landing() {
   const [, navigate] = useLocation();
@@ -17,9 +59,11 @@ export default function Landing() {
   const [studentClass, setStudentClass] = useState('Class 6');
   const [studentError, setStudentError] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const [champions, setChampions] = useState<ClassChampion[]>([]);
 
   useEffect(() => {
     setLoaded(true);
+    setChampions(getClassChampions(storage.getResults()));
     if (storage.isTeacherLoggedIn()) navigate('/teacher');
     else if (storage.isStudentLoggedIn() && storage.getCurrentStudent()) navigate('/student');
   }, []);
@@ -122,6 +166,133 @@ export default function Landing() {
           <p style={{ color: 'rgba(201,184,255,0.45)', fontSize: '0.9rem', fontFamily: 'Inter' }}>
             A platform for teachers to create exams and students to learn and grow.
           </p>
+        </div>
+
+        {/* Class Champions Leaderboard */}
+        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '0 1.5rem 2.5rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+              fontFamily: 'Poppins', fontWeight: '700',
+              fontSize: '1.05rem', color: '#f0c040',
+              letterSpacing: '0.04em', textTransform: 'uppercase',
+            }}>
+              🏆 Class Champions
+            </span>
+            <p style={{ color: 'rgba(201,184,255,0.35)', fontSize: '0.78rem', marginTop: '0.3rem' }}>
+              Top ranker from each class · min 5 exams
+            </p>
+          </div>
+
+          {champions.length === 0 ? (
+            <div style={{
+              background: 'rgba(201,184,255,0.04)',
+              border: '1px dashed rgba(201,184,255,0.15)',
+              borderRadius: '14px',
+              padding: '1.5rem',
+              textAlign: 'center',
+              color: 'rgba(201,184,255,0.3)',
+              fontSize: '0.85rem',
+            }}>
+              🏅 No champions yet — be the first to complete 5 exams!
+            </div>
+          ) : (
+            <div style={{
+              display: 'flex',
+              gap: '0.85rem',
+              overflowX: 'auto',
+              paddingBottom: '0.5rem',
+              scrollbarWidth: 'none',
+            }}>
+              {champions.map((c, i) => {
+                const color = c.avgScore >= 70 ? '#48c78e' : c.avgScore >= 50 ? '#f0c040' : '#ff6b6b';
+                const isTop3 = c.rank <= 3;
+                const medals = ['🥇', '🥈', '🥉'];
+                return (
+                  <div
+                    key={c.class}
+                    className="page-enter"
+                    style={{
+                      animationDelay: `${i * 0.07}s`,
+                      minWidth: '148px',
+                      background: isTop3
+                        ? `rgba(${c.rank === 1 ? '240,192,64' : c.rank === 2 ? '160,160,176' : '205,127,50'},0.07)`
+                        : 'rgba(201,184,255,0.04)',
+                      border: `1px solid ${isTop3
+                        ? `rgba(${c.rank === 1 ? '240,192,64' : c.rank === 2 ? '160,160,176' : '205,127,50'},0.28)`
+                        : 'rgba(201,184,255,0.12)'}`,
+                      borderRadius: '14px',
+                      padding: '1rem 0.85rem',
+                      textAlign: 'center',
+                      backdropFilter: 'blur(10px)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {/* Class badge */}
+                    <div style={{
+                      display: 'inline-block',
+                      background: 'rgba(201,184,255,0.1)',
+                      border: '1px solid rgba(201,184,255,0.18)',
+                      borderRadius: '6px',
+                      padding: '0.15rem 0.55rem',
+                      color: 'rgba(201,184,255,0.6)',
+                      fontSize: '0.7rem',
+                      fontWeight: '600',
+                      letterSpacing: '0.04em',
+                      marginBottom: '0.6rem',
+                    }}>
+                      {c.class}
+                    </div>
+
+                    {/* Medal or rank */}
+                    <div style={{ fontSize: isTop3 ? '1.6rem' : '0.88rem', marginBottom: '0.4rem', lineHeight: 1.2 }}>
+                      {isTop3 ? medals[c.rank - 1] : `#${c.rank}`}
+                    </div>
+
+                    {/* Name */}
+                    <div style={{
+                      fontFamily: 'Poppins',
+                      fontWeight: '700',
+                      fontSize: '0.82rem',
+                      color: 'rgba(230,225,255,0.9)',
+                      marginBottom: '0.45rem',
+                      lineHeight: 1.3,
+                      wordBreak: 'break-word',
+                    }}>
+                      {c.name}
+                    </div>
+
+                    {/* Score */}
+                    <div style={{
+                      fontFamily: 'Poppins',
+                      fontWeight: '800',
+                      fontSize: '1.25rem',
+                      color,
+                      lineHeight: 1,
+                      marginBottom: '0.25rem',
+                    }}>
+                      {c.avgScore}%
+                    </div>
+
+                    {/* Mini progress bar */}
+                    <div style={{ height: '3px', background: 'rgba(201,184,255,0.08)', borderRadius: '2px', overflow: 'hidden', margin: '0.35rem 0' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${c.avgScore}%`,
+                        background: color,
+                        borderRadius: '2px',
+                        transition: 'width 0.6s ease',
+                      }} />
+                    </div>
+
+                    <div style={{ color: 'rgba(201,184,255,0.35)', fontSize: '0.68rem' }}>
+                      {c.examCount} exams
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Login Cards */}
