@@ -6,6 +6,7 @@ import StudentDashboard from "@/pages/StudentDashboard";
 import Exam from "@/pages/Exam";
 import Results from "@/pages/Results";
 import Leaderboard from "@/pages/Leaderboard";
+import TeacherAnalytics from "@/pages/TeacherAnalytics";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/exam" component={Exam} />
       <Route path="/results" component={Results} />
       <Route path="/leaderboard" component={Leaderboard} />
+      <Route path="/analytics" component={TeacherAnalytics} />
       <Route component={NotFound} />
     </Switch>
   );

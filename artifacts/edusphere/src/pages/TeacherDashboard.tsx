@@ -53,6 +53,13 @@ export default function TeacherDashboard() {
             <button
               className="btn-outline"
               style={{ padding: '0.45rem 1rem', fontSize: '0.85rem' }}
+              onClick={() => navigate('/analytics')}
+            >
+              📈 Analytics
+            </button>
+            <button
+              className="btn-outline"
+              style={{ padding: '0.45rem 1rem', fontSize: '0.85rem' }}
               onClick={() => navigate('/leaderboard')}
             >
               🏆 Leaderboard
