@@ -174,7 +174,12 @@ export default function StudentDashboard() {
     ? Math.round(results.reduce((s, r) => s + r.percentage, 0) / results.length)
     : 0;
   const bestScore = results.length ? Math.max(...results.map(r => r.percentage)) : 0;
-  const sortedResults = [...results].sort((a, b) => b.timestamp - a.timestamp);
+  const sortedResults = [...results].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  const getPassingScore = (examId: string) => {
+    const e = storage.getExamById(examId);
+    return e?.passingScore ?? 60;
+  };
 
   const tabStyle = (tab: 'exams' | 'results') => ({
     padding: '0.55rem 1.4rem',
@@ -381,6 +386,27 @@ export default function StudentDashboard() {
                             <div style={{ color: 'rgba(201,184,255,0.5)', fontSize: '0.78rem', marginTop: '0.15rem' }}>
                               {r.score}/{r.total} correct
                             </div>
+                            {/* Pass / Fail badge */}
+                            {(() => {
+                              const ps = getPassingScore(r.examId);
+                              const isPassed = r.percentage >= ps;
+                              return (
+                                <div style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                                  marginTop: '0.35rem', padding: '0.18rem 0.6rem', borderRadius: '20px',
+                                  background: isPassed ? 'rgba(72,199,142,0.12)' : 'rgba(255,107,107,0.12)',
+                                  border: `1px solid ${isPassed ? 'rgba(72,199,142,0.4)' : 'rgba(255,107,107,0.4)'}`,
+                                }}>
+                                  <span style={{ fontSize: '0.72rem' }}>{isPassed ? '✅' : '❌'}</span>
+                                  <span style={{
+                                    fontFamily: 'Poppins', fontWeight: '700', fontSize: '0.7rem',
+                                    color: isPassed ? '#48c78e' : '#ff6b6b',
+                                  }}>
+                                    {isPassed ? 'PASSED' : 'FAILED'}
+                                  </span>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
 

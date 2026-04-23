@@ -30,6 +30,7 @@ export default function ExamCreator({ onPublish }: Props) {
   const [title, setTitle]   = useState('');
   const [cls, setCls]       = useState('Class 6');
   const [timer, setTimer]   = useState(30);
+  const [passingScore, setPassingScore] = useState(60);
   const [countMode, setCountMode] = useState<number | 'custom'>(10);
   const [customCount, setCustomCount] = useState(20);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -169,12 +170,13 @@ export default function ExamCreator({ onPublish }: Props) {
       title: title.trim(),
       class: cls,
       timerMinutes: timer,
+      passingScore: Math.max(1, Math.min(100, passingScore)),
       questions,
       createdAt: new Date().toISOString(),
     };
     storage.clearExamDraft();
     onPublish(exam);
-    setTitle(''); setCls('Class 6'); setTimer(30);
+    setTitle(''); setCls('Class 6'); setTimer(30); setPassingScore(60);
     setCountMode(10); setCustomCount(20);
     setQuestions([]); setSlide(0);
     setPhase('setup'); setFormError('');
@@ -240,6 +242,29 @@ export default function ExamCreator({ onPublish }: Props) {
             <div>
               <label className="edu-label">Timer (minutes)</label>
               <input className="edu-input" type="number" min={1} max={180} value={timer} onChange={e => setTimer(Number(e.target.value))} />
+            </div>
+            <div>
+              <label className="edu-label">Passing Score (%)</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  className="edu-input"
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={passingScore}
+                  onChange={e => setPassingScore(Math.max(1, Math.min(100, Number(e.target.value))))}
+                />
+                <span style={{
+                  position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+                  color: passingScore >= 80 ? '#ff6b6b' : passingScore >= 60 ? '#f0c040' : '#48c78e',
+                  fontSize: '0.78rem', fontWeight: '700', pointerEvents: 'none'
+                }}>
+                  {passingScore >= 80 ? 'Hard' : passingScore >= 60 ? 'Medium' : 'Easy'}
+                </span>
+              </div>
+              <p style={{ color: 'rgba(201,184,255,0.35)', fontSize: '0.7rem', marginTop: '0.3rem' }}>
+                Students scoring ≥{passingScore}% pass
+              </p>
             </div>
           </div>
 

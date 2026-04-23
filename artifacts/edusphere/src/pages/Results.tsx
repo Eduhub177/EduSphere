@@ -21,6 +21,8 @@ export default function Results() {
 
   const hasViolation = result.exitViolation === true;
   const pct = result.percentage;
+  const passingScore = exam?.passingScore ?? 60;
+  const passed = pct >= passingScore;
   const color = pct >= 70 ? '#48c78e' : pct >= 50 ? '#f0c040' : '#ff6b6b';
   const colorBg = pct >= 70 ? 'rgba(72,199,142,0.1)' : pct >= 50 ? 'rgba(240,192,64,0.1)' : 'rgba(255,107,107,0.1)';
   const grade = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B' : pct >= 60 ? 'C' : pct >= 50 ? 'D' : 'F';
@@ -85,6 +87,30 @@ export default function Results() {
               {pct}%
             </div>
             <div style={{ color, fontWeight: '600', fontSize: '1.1rem' }}>Grade: {grade}</div>
+
+            {/* Pass / Fail badge */}
+            <div style={{
+              marginTop: '0.85rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.35rem 1.1rem',
+              borderRadius: '30px',
+              background: passed ? 'rgba(72,199,142,0.18)' : 'rgba(255,107,107,0.18)',
+              border: `1.5px solid ${passed ? 'rgba(72,199,142,0.5)' : 'rgba(255,107,107,0.5)'}`,
+            }}>
+              <span style={{ fontSize: '1rem' }}>{passed ? '✅' : '❌'}</span>
+              <span style={{
+                fontFamily: 'Poppins', fontWeight: '800', fontSize: '0.95rem',
+                color: passed ? '#48c78e' : '#ff6b6b',
+                letterSpacing: '0.04em',
+              }}>
+                {passed ? 'PASSED' : 'FAILED'}
+              </span>
+            </div>
+            <div style={{ color: 'rgba(201,184,255,0.35)', fontSize: '0.7rem', marginTop: '0.3rem' }}>
+              Passing threshold: {passingScore}%
+            </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap', marginTop: '1rem' }}>

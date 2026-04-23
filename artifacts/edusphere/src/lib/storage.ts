@@ -11,6 +11,7 @@ export interface Exam {
   title: string;
   class: string;
   timerMinutes: number;
+  passingScore: number;
   questions: Question[];
   createdAt: string;
 }
