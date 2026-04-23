@@ -1,7 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "pnpm install && pnpm --filter edusphere build",
-  "outputDirectory": "artifacts/edusphere/dist",
-  "installCommand": "pnpm install",
-  "framework": null
+  "rootDirectory": "artifacts/edusphere",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install"
 }
