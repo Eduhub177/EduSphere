@@ -50,7 +50,7 @@ export default function Footer() {
       }}>
         <span style={{ opacity: 0.6, fontSize: '0.85rem' }}>&lt;/&gt;</span>
         <span>
-          Developed with ❤️ by{' '}
+          Developed by{' '}
           <span className="shimmer-text" style={{ fontWeight: '500', letterSpacing: '0.06em' }}>
             Sreshtangshu Gope
           </span>

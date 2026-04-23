@@ -97,6 +97,20 @@ export default function Landing() {
             EduSphere
           </h1>
           <p style={{
+            fontFamily: 'Poppins, sans-serif',
+            fontWeight: '700',
+            fontSize: 'clamp(1.1rem, 2.8vw, 1.45rem)',
+            background: 'linear-gradient(90deg, #f0c040, #ff8c42)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            letterSpacing: '0.06em',
+            marginBottom: '0.85rem',
+            textTransform: 'uppercase',
+          }}>
+            Go! &nbsp;and&nbsp; Crack it!
+          </p>
+          <p style={{
             color: 'rgba(201,184,255,0.75)',
             fontSize: 'clamp(1rem, 2.5vw, 1.25rem)',
             fontFamily: 'Inter, sans-serif',

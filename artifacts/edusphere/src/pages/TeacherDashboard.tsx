@@ -45,7 +45,7 @@ export default function TeacherDashboard() {
       <ToastContainer />
 
       <Navbar
-        title="Teacher Dashboard"
+        title=""
         showLogout
         onLogout={handleLogout}
         rightContent={
