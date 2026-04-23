@@ -6,46 +6,42 @@ import { ToastContainer, showToast } from '@/components/Toast';
 import Footer from '@/components/Footer';
 import { storage, Result } from '@/lib/storage';
 
-interface ClassChampion {
+interface ExamClassTopper {
+  examTitle: string;
   class: string;
   name: string;
-  avgScore: number;
-  examCount: number;
-  rank: number;
+  score: number;
+  total: number;
+  percentage: number;
 }
 
-function getClassChampions(results: Result[]): ClassChampion[] {
-  const map = new Map<string, { name: string; phone: string; class: string; scores: number[] }>();
-  results.forEach(r => {
-    const key = `${r.studentName}|${r.studentPhone}`;
-    if (!map.has(key)) map.set(key, { name: r.studentName, phone: r.studentPhone, class: r.studentClass, scores: [] });
-    map.get(key)!.scores.push(r.percentage);
-  });
+function getExamClassToppers(results: Result[]): ExamClassTopper[] {
+  // Group results by examId + class, keep the highest scorer
+  const map = new Map<string, ExamClassTopper>();
 
-  const qualified: { name: string; class: string; avgScore: number; examCount: number }[] = [];
-  map.forEach(v => {
-    if (v.scores.length >= 5) {
-      const avg = Math.round(v.scores.reduce((a, b) => a + b, 0) / v.scores.length);
-      qualified.push({ name: v.name, class: v.class, avgScore: avg, examCount: v.scores.length });
+  results.forEach(r => {
+    const key = `${r.examId}|${r.studentClass}`;
+    const existing = map.get(key);
+    if (!existing || r.percentage > existing.percentage ||
+       (r.percentage === existing.percentage && r.score > existing.score)) {
+      map.set(key, {
+        examTitle: r.examTitle,
+        class: r.studentClass,
+        name: r.studentName,
+        score: r.score,
+        total: r.total,
+        percentage: r.percentage,
+      });
     }
   });
 
-  // Top student per class
-  const byClass = new Map<string, typeof qualified[0]>();
-  qualified.forEach(s => {
-    if (!byClass.has(s.class) || s.avgScore > byClass.get(s.class)!.avgScore) byClass.set(s.class, s);
-  });
-
-  // Sort classes by class number, assign rank across all
-  const all = qualified.sort((a, b) => b.avgScore - a.avgScore);
   const classOrder = ['Class 6','Class 7','Class 8','Class 9','Class 10','Class 11','Class 12'];
 
-  return classOrder
-    .filter(c => byClass.has(c))
-    .map(c => {
-      const s = byClass.get(c)!;
-      return { class: c, name: s.name, avgScore: s.avgScore, examCount: s.examCount, rank: all.findIndex(x => x.name === s.name && x.class === s.class) + 1 };
-    });
+  // Flatten, sort by class order then exam title
+  return Array.from(map.values()).sort((a, b) => {
+    const ci = classOrder.indexOf(a.class) - classOrder.indexOf(b.class);
+    return ci !== 0 ? ci : a.examTitle.localeCompare(b.examTitle);
+  });
 }
 
 export default function Landing() {
@@ -59,11 +55,11 @@ export default function Landing() {
   const [studentClass, setStudentClass] = useState('Class 6');
   const [studentError, setStudentError] = useState('');
   const [loaded, setLoaded] = useState(false);
-  const [champions, setChampions] = useState<ClassChampion[]>([]);
+  const [toppers, setToppers] = useState<ExamClassTopper[]>([]);
 
   useEffect(() => {
     setLoaded(true);
-    setChampions(getClassChampions(storage.getResults()));
+    setToppers(getExamClassToppers(storage.getResults()));
     if (storage.isTeacherLoggedIn()) navigate('/teacher');
     else if (storage.isStudentLoggedIn() && storage.getCurrentStudent()) navigate('/student');
   }, []);
@@ -180,11 +176,11 @@ export default function Landing() {
               🏆 Class Champions
             </span>
             <p style={{ color: 'rgba(201,184,255,0.35)', fontSize: '0.78rem', marginTop: '0.3rem' }}>
-              Top ranker from each class · min 5 exams
+              #1 scorer per class · updated after every exam
             </p>
           </div>
 
-          {champions.length === 0 ? (
+          {toppers.length === 0 ? (
             <div style={{
               background: 'rgba(201,184,255,0.04)',
               border: '1px dashed rgba(201,184,255,0.15)',
@@ -194,7 +190,7 @@ export default function Landing() {
               color: 'rgba(201,184,255,0.3)',
               fontSize: '0.85rem',
             }}>
-              🏅 No champions yet — be the first to complete 5 exams!
+              🏅 No toppers yet — start taking exams to appear here!
             </div>
           ) : (
             /* Marquee ticker — overflows clipped, track duplicated for seamless loop */
@@ -211,76 +207,92 @@ export default function Landing() {
                 pointerEvents: 'none'
               }} />
 
-              <div className="champions-track" style={{ gap: '0.85rem', padding: '0.25rem 0' }}>
-                {/* Render champions twice — second copy creates the seamless loop */}
-                {[...champions, ...champions].map((c, i) => {
-                  const color = c.avgScore >= 70 ? '#48c78e' : c.avgScore >= 50 ? '#f0c040' : '#ff6b6b';
-                  const isTop3 = c.rank <= 3;
-                  const medals = ['🥇', '🥈', '🥉'];
+              <div className="champions-track" style={{ padding: '0.25rem 0' }}>
+                {/* Render toppers twice for seamless infinite loop */}
+                {[...toppers, ...toppers].map((t, i) => {
+                  const color = t.percentage >= 70 ? '#48c78e' : t.percentage >= 50 ? '#f0c040' : '#ff6b6b';
                   return (
                     <div
                       key={i}
                       style={{
-                        minWidth: '148px',
-                        background: isTop3
-                          ? `rgba(${c.rank === 1 ? '240,192,64' : c.rank === 2 ? '160,160,176' : '205,127,50'},0.07)`
-                          : 'rgba(201,184,255,0.04)',
-                        border: `1px solid ${isTop3
-                          ? `rgba(${c.rank === 1 ? '240,192,64' : c.rank === 2 ? '160,160,176' : '205,127,50'},0.28)`
-                          : 'rgba(201,184,255,0.12)'}`,
+                        minWidth: '170px',
+                        background: 'rgba(255,215,0,0.05)',
+                        border: '1px solid rgba(255,215,0,0.2)',
                         borderRadius: '14px',
-                        padding: '1rem 0.85rem',
+                        padding: '1rem 1rem',
                         textAlign: 'center',
                         backdropFilter: 'blur(10px)',
                         flexShrink: 0,
-                        marginRight: '0.85rem',
+                        marginRight: '0.9rem',
                       }}
                     >
+                      {/* Exam title */}
+                      <div style={{
+                        fontSize: '0.68rem',
+                        fontWeight: '700',
+                        color: 'rgba(255,215,0,0.7)',
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                        marginBottom: '0.3rem',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: '150px',
+                      }}>
+                        {t.examTitle}
+                      </div>
+
                       {/* Class badge */}
                       <div style={{
                         display: 'inline-block',
                         background: 'rgba(201,184,255,0.1)',
-                        border: '1px solid rgba(201,184,255,0.18)',
+                        border: '1px solid rgba(201,184,255,0.2)',
                         borderRadius: '6px',
-                        padding: '0.15rem 0.55rem',
+                        padding: '0.12rem 0.5rem',
                         color: 'rgba(201,184,255,0.6)',
-                        fontSize: '0.7rem',
+                        fontSize: '0.68rem',
                         fontWeight: '600',
-                        letterSpacing: '0.04em',
-                        marginBottom: '0.6rem',
+                        marginBottom: '0.55rem',
                       }}>
-                        {c.class}
+                        {t.class}
                       </div>
 
-                      {/* Medal or rank */}
-                      <div style={{ fontSize: isTop3 ? '1.6rem' : '0.88rem', marginBottom: '0.4rem', lineHeight: 1.2 }}>
-                        {isTop3 ? medals[c.rank - 1] : `#${c.rank}`}
-                      </div>
+                      {/* Gold medal always — each card is the #1 of that exam+class */}
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.35rem', lineHeight: 1 }}>🥇</div>
 
                       {/* Name */}
                       <div style={{
-                        fontFamily: 'Poppins', fontWeight: '700', fontSize: '0.82rem',
-                        color: 'rgba(230,225,255,0.9)', marginBottom: '0.45rem',
-                        lineHeight: 1.3, wordBreak: 'break-word',
+                        fontFamily: 'Poppins',
+                        fontWeight: '700',
+                        fontSize: '0.85rem',
+                        color: 'rgba(230,225,255,0.95)',
+                        marginBottom: '0.4rem',
+                        lineHeight: 1.3,
+                        wordBreak: 'break-word',
                       }}>
-                        {c.name}
+                        {t.name}
                       </div>
 
                       {/* Score */}
                       <div style={{
-                        fontFamily: 'Poppins', fontWeight: '800', fontSize: '1.25rem',
-                        color, lineHeight: 1, marginBottom: '0.25rem',
+                        fontFamily: 'Poppins',
+                        fontWeight: '800',
+                        fontSize: '1.2rem',
+                        color,
+                        lineHeight: 1,
+                        marginBottom: '0.2rem',
                       }}>
-                        {c.avgScore}%
+                        {t.percentage}%
+                      </div>
+
+                      {/* correct / total */}
+                      <div style={{ color: 'rgba(201,184,255,0.4)', fontSize: '0.68rem', marginBottom: '0.3rem' }}>
+                        {t.score}/{t.total} correct
                       </div>
 
                       {/* Mini bar */}
-                      <div style={{ height: '3px', background: 'rgba(201,184,255,0.08)', borderRadius: '2px', overflow: 'hidden', margin: '0.35rem 0' }}>
-                        <div style={{ height: '100%', width: `${c.avgScore}%`, background: color, borderRadius: '2px' }} />
-                      </div>
-
-                      <div style={{ color: 'rgba(201,184,255,0.35)', fontSize: '0.68rem' }}>
-                        {c.examCount} exams
+                      <div style={{ height: '3px', background: 'rgba(201,184,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${t.percentage}%`, background: color, borderRadius: '2px' }} />
                       </div>
                     </div>
                   );
