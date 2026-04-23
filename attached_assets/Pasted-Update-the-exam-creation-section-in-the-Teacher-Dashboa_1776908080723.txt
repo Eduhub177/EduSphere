@@ -1,0 +1,101 @@
+Update the exam creation section in the Teacher Dashboard 
+with these new features:
+
+---
+
+📋 QUESTION COUNT SELECTOR:
+- At the top of the "Create Exam" form, BEFORE the questions 
+  section, add a field:
+  "How many questions do you want to add?"
+- Show a number input (min 1, max 50) OR a dropdown with 
+  options: 5, 10, 15, 20, 25, 30, Custom
+- When the teacher clicks "Generate Questions" button after 
+  selecting the number, automatically create that many empty 
+  question slides/cards ready to fill in
+- Show a progress indicator like "Question 3 of 10" at the top
+
+---
+
+📸 PHOTO UPLOAD FOR QUESTIONS:
+- Each question card must have an "Add Image" section with 
+  two buttons:
+  1. 📁 "Upload from Device" — opens file picker 
+     (accepts jpg, png, gif, webp)
+  2. 📷 "Use Camera" — opens device camera directly 
+     using the browser's camera API (getUserMedia)
+- After selecting/capturing a photo:
+  - Show a preview of the image inside the question card
+  - Show a small "Remove Photo" button (×) to delete it
+  - Store the image as base64 in localStorage along with 
+    the question data
+- Image should display above the question text in the 
+  question card
+- On the student exam page, if a question has an image, 
+  show it clearly above the question text
+- On the results page, also show the image next to 
+  each question
+
+---
+
+✏️ PRE-WRITTEN A B C D OPTIONS:
+- In each question card, the 4 answer options must be 
+  pre-labeled and pre-structured like this:
+
+  Question: [text input field]
+  
+  🅐  [editable text input field]
+  🅑  [editable text input field]  
+  🅒  [editable text input field]
+  🅓  [editable text input field]
+
+- The A B C D labels are fixed and styled (cannot be 
+  removed) but the text next to them is fully editable
+- Style the option inputs with a subtle left border in 
+  different colors:
+  A = blue border, B = green border, 
+  C = orange border, D = red border
+- Each option row has a radio button on the LEFT side 
+  to mark it as the correct answer
+- When a radio is selected, that entire option row 
+  highlights with a soft green glow to show it's 
+  the correct answer
+
+---
+
+🎴 QUESTION SLIDES NAVIGATION:
+- Show questions one at a time as slides (not all at once)
+- Navigation buttons at the bottom:
+  "← Previous Question" and "Next Question →"
+- Current question number shown at top: "Question 2 of 10"
+- A mini progress bar showing how many questions are filled
+- Each slide has a status dot at the top (gray = empty, 
+  green = filled, yellow = partial)
+- "Jump to Question" — small numbered buttons (1,2,3...) 
+  at the top so teacher can click any number to jump 
+  directly to that question slide
+- Last slide shows a "Review All & Publish" button instead 
+  of "Next"
+- Review screen shows a summary of all questions in a 
+  compact list before final publish
+
+---
+
+💾 SAVING:
+- Auto-save each question slide to localStorage as the 
+  teacher fills it in (don't lose progress if page refreshes)
+- Show a small "Saved ✓" indicator after each auto-save
+- If teacher accidentally closes the page, when they 
+  come back show a prompt:
+  "You have an unsaved exam draft. Continue editing?"
+
+---
+
+🎨 DESIGN:
+- Each question slide should look like a clean card with 
+  smooth slide animation when navigating between questions
+- The camera preview should open as a modal overlay 
+  with a "Capture Photo" button and "Cancel" button
+- Keep the same dark navy/purple aesthetic as the 
+  rest of the website
+- Make it fully mobile responsive so teachers can 
+  create exams from their phone camera easily

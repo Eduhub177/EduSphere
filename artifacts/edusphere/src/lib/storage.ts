@@ -3,6 +3,7 @@ export interface Question {
   question: string;
   options: [string, string, string, string];
   correct: 'A' | 'B' | 'C' | 'D';
+  image?: string;
 }
 
 export interface Exam {
@@ -146,6 +147,19 @@ export const storage = {
   },
   setLastResult(result: Result) {
     localStorage.setItem('lastResult', JSON.stringify(result));
+  },
+
+  getExamDraft(): Record<string, unknown> | null {
+    try {
+      const d = localStorage.getItem('examDraft');
+      return d ? JSON.parse(d) : null;
+    } catch { return null; }
+  },
+  saveExamDraft(draft: Record<string, unknown>) {
+    localStorage.setItem('examDraft', JSON.stringify(draft));
+  },
+  clearExamDraft() {
+    localStorage.removeItem('examDraft');
   },
 
   generateId(): string {

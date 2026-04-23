@@ -325,6 +325,15 @@ export default function Exam() {
 
         {/* Question */}
         <div className="glass" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
+          {exam.questions[currentQ].image && (
+            <div style={{ marginBottom: '1.25rem' }}>
+              <img
+                src={exam.questions[currentQ].image}
+                alt="Question"
+                style={{ width: '100%', maxHeight: '260px', objectFit: 'contain', borderRadius: '10px', border: '1px solid rgba(201,184,255,0.15)' }}
+              />
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
             <span style={{
               background: 'linear-gradient(135deg, #c9b8ff, #9d7ee0)',

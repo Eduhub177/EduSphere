@@ -114,6 +114,15 @@ export default function Results() {
               const isCorrect = studentAns === q.correct;
               return (
                 <div key={i} className="glass" style={{ padding: '1.25rem', marginBottom: '0.75rem' }}>
+                  {q.image && (
+                    <div style={{ marginBottom: '0.75rem' }}>
+                      <img
+                        src={q.image}
+                        alt="Question"
+                        style={{ width: '100%', maxHeight: '180px', objectFit: 'contain', borderRadius: '8px', border: '1px solid rgba(201,184,255,0.12)' }}
+                      />
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', alignItems: 'flex-start' }}>
                     <span style={{
                       background: isCorrect ? 'rgba(72,199,142,0.2)' : 'rgba(255,107,107,0.2)',
