@@ -231,6 +231,62 @@ export default function TeacherDashboard() {
         </div>
       </div>
 
+      {/* Delete confirmation modal */}
+      {confirmDelete && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 500,
+          background: 'rgba(10,10,25,0.75)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '1rem',
+        }} onClick={() => setConfirmDelete(null)}>
+          <div
+            className="glass page-enter"
+            style={{ maxWidth: '400px', width: '100%', padding: '2rem', textAlign: 'center' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🗑</div>
+            <h3 style={{ fontFamily: 'Poppins', fontWeight: '700', fontSize: '1.15rem', color: '#ff7070', marginBottom: '0.5rem' }}>
+              Delete Exam?
+            </h3>
+            <p style={{ color: 'rgba(230,225,255,0.75)', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
+              <strong style={{ color: 'rgba(230,225,255,0.95)' }}>"{confirmDelete.title}"</strong>
+            </p>
+            <p style={{ color: 'rgba(201,184,255,0.45)', fontSize: '0.8rem', marginBottom: '1.75rem' }}>
+              This will permanently remove the exam. Student results for this exam will remain stored.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                className="btn-outline"
+                style={{ flex: 1, padding: '0.65rem' }}
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                style={{
+                  flex: 1, padding: '0.65rem',
+                  background: 'rgba(255,80,80,0.15)',
+                  border: '1px solid rgba(255,80,80,0.4)',
+                  borderRadius: '10px',
+                  color: '#ff7070',
+                  fontFamily: 'Poppins',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,80,80,0.28)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,80,80,0.15)')}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );
