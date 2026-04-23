@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "cd artifacts/edusphere && npm install && npm run build",
+  "buildCommand": "pnpm install && pnpm --filter edusphere build",
   "outputDirectory": "artifacts/edusphere/dist",
-  "installCommand": "npm install --prefix artifacts/edusphere",
+  "installCommand": "pnpm install",
   "framework": null
 }
