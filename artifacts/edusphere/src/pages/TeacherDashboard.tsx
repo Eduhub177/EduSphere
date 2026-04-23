@@ -49,17 +49,26 @@ export default function TeacherDashboard() {
         showLogout
         onLogout={handleLogout}
         rightContent={
-          <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
             <button
               className="btn-outline"
               style={{ padding: '0.45rem 1rem', fontSize: '0.85rem' }}
-              onClick={openNotif}
+              onClick={() => navigate('/leaderboard')}
             >
-              🔔 Notifications
+              🏆 Leaderboard
             </button>
-            {unread > 0 && (
-              <div className="badge-count">{unread > 9 ? '9+' : unread}</div>
-            )}
+            <div style={{ position: 'relative' }}>
+              <button
+                className="btn-outline"
+                style={{ padding: '0.45rem 1rem', fontSize: '0.85rem' }}
+                onClick={openNotif}
+              >
+                🔔 Notifications
+              </button>
+              {unread > 0 && (
+                <div className="badge-count">{unread > 9 ? '9+' : unread}</div>
+              )}
+            </div>
           </div>
         }
       />
