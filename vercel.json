@@ -1,15 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "artifacts/edusphere/index.html",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "artifacts/edusphere/$1"
-    }
-  ]
+  "buildCommand": "cd artifacts/edusphere && npm install && npm run build",
+  "outputDirectory": "artifacts/edusphere/dist",
+  "installCommand": "npm install",
+  "framework": null
 }
