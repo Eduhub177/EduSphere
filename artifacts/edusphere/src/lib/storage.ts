@@ -68,6 +68,9 @@ export const storage = {
   getExamById(id: string): Exam | null {
     return this.getExams().find(e => e.id === id) || null;
   },
+  deleteExam(id: string) {
+    this.saveExams(this.getExams().filter(e => e.id !== id));
+  },
 
   getResults(): Result[] {
     try {

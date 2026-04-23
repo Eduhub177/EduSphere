@@ -13,6 +13,7 @@ export default function TeacherDashboard() {
   const [notifications, setNotifications] = useState(storage.getNotifications());
   const [notifOpen, setNotifOpen] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [confirmDelete, setConfirmDelete] = useState<Exam | null>(null);
 
   useEffect(() => {
     if (!storage.isTeacherLoggedIn()) { navigate('/'); return; }
@@ -38,6 +39,14 @@ export default function TeacherDashboard() {
     storage.addExam(exam);
     setExams(storage.getExams());
     showToast(`Exam "${exam.title}" published successfully!`, 'success');
+  };
+
+  const handleDelete = () => {
+    if (!confirmDelete) return;
+    storage.deleteExam(confirmDelete.id);
+    setExams(storage.getExams());
+    showToast(`Exam "${confirmDelete.title}" deleted.`, 'error');
+    setConfirmDelete(null);
   };
 
   return (
@@ -178,9 +187,9 @@ export default function TeacherDashboard() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
               {exams.map(exam => (
-                <div key={exam.id} className="glass" style={{ padding: '1.5rem' }}>
+                <div key={exam.id} className="glass" style={{ padding: '1.5rem', position: 'relative' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                    <h3 style={{ fontFamily: 'Poppins', fontWeight: '600', color: 'rgba(230,225,255,0.95)', fontSize: '1rem', lineHeight: '1.3' }}>
+                    <h3 style={{ fontFamily: 'Poppins', fontWeight: '600', color: 'rgba(230,225,255,0.95)', fontSize: '1rem', lineHeight: '1.3', flex: 1, marginRight: '0.5rem' }}>
                       {exam.title}
                     </h3>
                     <span className="status-active">Active</span>
@@ -194,6 +203,27 @@ export default function TeacherDashboard() {
                   <div style={{ marginTop: '0.5rem', color: 'rgba(201,184,255,0.4)', fontSize: '0.75rem' }}>
                     {new Date(exam.createdAt).toLocaleDateString()}
                   </div>
+                  <button
+                    onClick={() => setConfirmDelete(exam)}
+                    style={{
+                      marginTop: '1rem',
+                      width: '100%',
+                      padding: '0.45rem',
+                      background: 'rgba(255,80,80,0.07)',
+                      border: '1px solid rgba(255,80,80,0.25)',
+                      borderRadius: '8px',
+                      color: '#ff7070',
+                      fontSize: '0.8rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontFamily: 'Poppins',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,80,80,0.15)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,80,80,0.07)')}
+                  >
+                    🗑 Delete Exam
+                  </button>
                 </div>
               ))}
             </div>
