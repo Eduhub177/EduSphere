@@ -9,7 +9,7 @@ const OPT_LABELS = ['A', 'B', 'C', 'D'];
 const OPT_COLORS = ['#5b8dee', '#48c78e', '#f0a500', '#ff6b6b'];
 
 function makeEmpty(): Question {
-  return { question: '', options: ['', '', '', ''], correct: 'A', image: undefined };
+  return { question: '', options: ['A', 'B', 'C', 'D'], correct: 'A', image: undefined };
 }
 
 function qStatus(q: Question): 'empty' | 'partial' | 'filled' {
