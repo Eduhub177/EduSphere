@@ -23,11 +23,16 @@ export default function Exam() {
   const [violationCount, setViolationCount] = useState(0);
   const [warningMessage, setWarningMessage] = useState('');
 
+  const [timerAlert, setTimerAlert] = useState<{ msg: string; icon: string; level: 'warning' | 'urgent' } | null>(null);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const examRef = useRef<ExamType | null>(null);
   const answersRef = useRef<(string | null)[]>([]);
   const submittedRef = useRef(false);
   const violationCountRef = useRef(0);
+  const twoMinAlertedRef = useRef(false);
+  const thirtySecAlertedRef = useRef(false);
+  const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep refs in sync so event handlers always have latest values
   useEffect(() => { examRef.current = exam; }, [exam]);
@@ -123,6 +128,25 @@ export default function Exam() {
     return () => clearInterval(timerRef.current!);
   }, [exam, doSubmit]);
 
+  // Timer countdown alerts
+  useEffect(() => {
+    if (!exam || submittedRef.current) return;
+
+    const showAlert = (msg: string, icon: string, level: 'warning' | 'urgent', duration: number) => {
+      if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+      setTimerAlert({ msg, icon, level });
+      alertTimerRef.current = setTimeout(() => setTimerAlert(null), duration);
+    };
+
+    if (timeLeft === 120 && !twoMinAlertedRef.current) {
+      twoMinAlertedRef.current = true;
+      showAlert('2 minutes remaining!', '⏰', 'warning', 5000);
+    } else if (timeLeft === 30 && !thirtySecAlertedRef.current) {
+      thirtySecAlertedRef.current = true;
+      showAlert('30 seconds left — hurry!', '🚨', 'urgent', 6000);
+    }
+  }, [timeLeft, exam]);
+
   // Anti-cheat: visibilitychange (tab switch)
   useEffect(() => {
     if (!exam) return;
@@ -205,6 +229,25 @@ export default function Exam() {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)', display: 'flex', flexDirection: 'column' }}>
       <ToastContainer />
+
+      {/* Timer countdown alert banner */}
+      {timerAlert && (
+        <div
+          className={`timer-alert-banner ${timerAlert.level}`}
+          onClick={() => setTimerAlert(null)}
+          style={{ cursor: 'pointer' }}
+        >
+          <span style={{ fontSize: '1.75rem', lineHeight: 1, flexShrink: 0 }}>{timerAlert.icon}</span>
+          <div>
+            <div style={{ fontFamily: 'Poppins', fontWeight: '800', fontSize: '1rem', color: '#fff', lineHeight: 1.2 }}>
+              {timerAlert.msg}
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.75rem', marginTop: '0.2rem' }}>
+              Tap to dismiss
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Exit Warning Overlay */}
       {showWarning && (
